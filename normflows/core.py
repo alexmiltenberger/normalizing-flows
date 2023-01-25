@@ -84,7 +84,7 @@ class NormalizingFlow(nn.Module):
             log_det += log_d
         return x, log_det
 
-    def forward_kld(self, x):
+    def forward_kld(self, x, weights=None):
         """Estimates forward KL divergence, see [arXiv 1912.02762](https://arxiv.org/abs/1912.02762)
 
         Args:
@@ -99,7 +99,12 @@ class NormalizingFlow(nn.Module):
             z, log_det = self.flows[i].inverse(z)
             log_q += log_det
         log_q += self.q0.log_prob(z)
-        return -torch.mean(log_q)
+
+        if weights is None:
+            return -torch.mean(log_q)
+        else:
+            # weights = torch.from_numpy(weights)
+            return -torch.mean(log_q * weights)
 
     def reverse_kld(self, num_samples=1, beta=1.0, score_fn=True):
         """Estimates reverse KL divergence, see [arXiv 1912.02762](https://arxiv.org/abs/1912.02762)
